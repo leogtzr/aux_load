@@ -20,12 +20,11 @@ func main() {
 	})
 
 	m.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Bye!")
 		s.Shutdown(context.Background())
 	})
 
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello world")
+		fmt.Fprintf(w, ":)")
 	})
 
 	// main process ...
