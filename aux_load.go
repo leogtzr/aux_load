@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
-func processFiles() {
-	for i := 0; i < 30; i++ {
+func processFiles(s *http.Server) {
+	for i := 0; i < 5; i++ {
 		fmt.Println(i)
 		time.Sleep(1 * time.Second)
 	}
+
+	s.Shutdown(context.Background())
 }
 
 func main() {
@@ -33,7 +35,7 @@ func main() {
 	})
 
 	// main process ...
-	go processFiles()
+	go processFiles(&s)
 
 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
