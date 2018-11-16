@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var x int = 0
-
 func main() {
 	m := http.NewServeMux()
 	s := http.Server{Addr: ":8000", Handler: m}
