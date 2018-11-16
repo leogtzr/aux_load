@@ -25,6 +25,10 @@ func processFiles(server *http.Server) {
 }
 
 func main() {
+
+	// TODO: Get current working dir.
+	// TODO: Set up log file:
+
 	m := http.NewServeMux()
 	server := http.Server{Addr: ":8000", Handler: m}
 
@@ -35,6 +39,10 @@ func main() {
 
 	m.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
 		// stats
+	})
+
+	m.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+		// stop
 	})
 
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
