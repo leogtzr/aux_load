@@ -8,22 +8,22 @@ import (
 	"time"
 )
 
-func processFiles(s *http.Server) {
+func processFiles(server *http.Server) {
 	for i := 0; i < 5; i++ {
 		fmt.Println(i)
 		time.Sleep(1 * time.Second)
 	}
 
-	s.Shutdown(context.Background())
+	server.Shutdown(context.Background())
 }
 
 func main() {
 	m := http.NewServeMux()
-	s := http.Server{Addr: ":8000", Handler: m}
+	server := http.Server{Addr: ":8000", Handler: m}
 
 	m.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Bye!")
-		s.Shutdown(context.Background())
+		server.Shutdown(context.Background())
 	})
 
 	m.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +35,9 @@ func main() {
 	})
 
 	// main process ...
-	go processFiles(&s)
+	go processFiles(&server)
 
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
 
