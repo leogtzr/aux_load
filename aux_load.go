@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+// InputFileInfo ...
+type InputFileInfo struct {
+	ReadyFile string
+	ZipFile   string
+	LoadFile  string
+}
+
 func processFiles(server *http.Server) {
 	for i := 0; i < 5; i++ {
 		fmt.Println(i)
