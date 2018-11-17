@@ -28,30 +28,9 @@ func processFiles(server *http.Server) {
 	server.Shutdown(context.Background())
 }
 
-// func settingUpServer()
-
-func main() {
-
-	// Getting working directory:
-	workingDir, err := osext.ExecutableFolder()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Setting up logging:
-	f, err := os.OpenFile(workingDir+"/aux_load.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	log.SetOutput(f)
-	defer f.Close()
-
-	// TODO: Implement CLI options to get the port.
-	port := flag.String("host", ":8000", "the port of the application")
-	flag.Parse()
-
+func settingUpServer(addr string) *http.Server {
 	m := http.NewServeMux()
-	server := http.Server{Addr: *port, Handler: m}
+	server := &http.Server{Addr: addr, Handler: m}
 
 	m.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Bye!")
@@ -70,8 +49,34 @@ func main() {
 		fmt.Fprintf(w, "OK")
 	})
 
+	return server
+}
+
+func main() {
+
+	// Getting working directory:
+	workingDir, err := osext.ExecutableFolder()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Setting up logging:
+	f, err := os.OpenFile(workingDir+"/aux_load.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	log.SetOutput(f)
+	defer f.Close()
+
+	port := flag.String("host", ":8000", "the port of the application")
+	flag.Parse()
+
+	log.Printf("Listening at: %q", *port)
+
+	server := settingUpServer(*port)
+
 	// main process ...
-	go processFiles(&server)
+	go processFiles(server)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
