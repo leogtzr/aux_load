@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/kardianos/osext"
 )
 
 // InputFileInfo ...
@@ -26,8 +29,21 @@ func processFiles(server *http.Server) {
 
 func main() {
 
-	// TODO: Get current working dir.
-	// TODO: Set up log file:
+	// Getting working directory:
+	workingDir, err := osext.ExecutableFolder()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Setting up logging:
+	f, err := os.OpenFile(workingDir+"/aux_load.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	log.SetOutput(f)
+	defer f.Close()
+
+	// TODO: Implement CLI options to get the port.
 
 	m := http.NewServeMux()
 	server := http.Server{Addr: ":8000", Handler: m}
@@ -46,7 +62,7 @@ func main() {
 	})
 
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, ":)")
+		fmt.Fprintf(w, "OK")
 	})
 
 	// main process ...
