@@ -28,6 +28,24 @@ func processFiles(server *http.Server) {
 	server.Shutdown(context.Background())
 }
 
+func statsHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// stats
+	})
+}
+
+func stopHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// stop
+	})
+}
+
+func okHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "OK")
+	})
+}
+
 func settingUpServer(addr string) *http.Server {
 	m := http.NewServeMux()
 	server := &http.Server{Addr: addr, Handler: m}
@@ -37,17 +55,9 @@ func settingUpServer(addr string) *http.Server {
 		server.Shutdown(context.Background())
 	})
 
-	m.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
-		// stats
-	})
-
-	m.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		// stop
-	})
-
-	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "OK")
-	})
+	m.HandleFunc("/stats", statsHandler())
+	m.HandleFunc("/stop", stopHandler())
+	m.HandleFunc("/", okHandler())
 
 	return server
 }
@@ -73,6 +83,7 @@ func main() {
 
 	log.Printf("Listening at: %q", *port)
 
+	// Getting the server:
 	server := settingUpServer(*port)
 
 	// main process ...
