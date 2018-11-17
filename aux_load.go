@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -27,6 +28,8 @@ func processFiles(server *http.Server) {
 	server.Shutdown(context.Background())
 }
 
+// func settingUpServer()
+
 func main() {
 
 	// Getting working directory:
@@ -44,9 +47,11 @@ func main() {
 	defer f.Close()
 
 	// TODO: Implement CLI options to get the port.
+	port := flag.String("host", ":8000", "the port of the application")
+	flag.Parse()
 
 	m := http.NewServeMux()
-	server := http.Server{Addr: ":8000", Handler: m}
+	server := http.Server{Addr: *port, Handler: m}
 
 	m.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Bye!")
