@@ -1,16 +1,13 @@
-package main
+package aux_load
 
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/kardianos/osext"
 )
 
 const (
@@ -26,11 +23,12 @@ type InputFileInfo struct {
 	LoadFile  string
 }
 
-// Config ...
+// Config represents the basic structure of the configuration used to run this job.
 type Config struct {
 	StopFileName string `json:"stopFileName"`
 	OnFailEmail  string `json:"onFailEmail"`
 	CutOffTime   int    `json:"cutofftime"`
+	ControlFile  string
 }
 
 func (config *Config) String() string {
@@ -102,7 +100,7 @@ func settingUpServer(addr string) *http.Server {
 	return server
 }
 
-func readConfigurationFile(path string) (*Config, error) {
+func readConfigurationFile(path, controlFile string) (*Config, error) {
 	exists, err := exists(path)
 	if !exists {
 		return nil, fmt.Errorf("'%s' does not exists", path)
@@ -121,50 +119,40 @@ func readConfigurationFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	config.ControlFile = controlFile
 	return &config, nil
 }
 
-func main() {
-
-	// Getting working directory:
-	workingDir, err := osext.ExecutableFolder()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+// Start is the main entry point.
+func Start(workingDir, controlFile, addr string) error {
 	// Setting up logging:
 	f, err := os.OpenFile(workingDir+"/aux_load.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+		return err
 	}
 	log.SetOutput(f)
 	defer f.Close()
 
 	// read configuration file:
-	config, err := readConfigurationFile(workingDir + "/" + ConfFileName)
+	config, err := readConfigurationFile(workingDir+"/"+ConfFileName, controlFile)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	port := flag.String("host", ":8000", "the port of the application")
-	controlFile := flag.String("ctl", controlFileNotSpecified, "control file to load")
-	flag.Parse()
-
-	if *controlFile == controlFileNotSpecified {
-		log.Fatal("control file with -ctl option not specified")
-	}
-
-	log.Printf("Listening at: %q", *port)
+	log.Printf("Listening at: %q", addr)
 
 	// Getting the server:
-	server := settingUpServer(*port)
+	server := settingUpServer(addr)
 
 	// main process ...
 	go processFiles(server, config, workingDir)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Printf("Finished")
+
+	return nil
 }
