@@ -15,7 +15,8 @@ import (
 
 const (
 	// ConfFileName ...
-	ConfFileName = "env.conf"
+	ConfFileName            = "env.conf"
+	controlFileNotSpecified = "_._notspecified_._"
 )
 
 // InputFileInfo ...
@@ -28,10 +29,13 @@ type InputFileInfo struct {
 // Config ...
 type Config struct {
 	StopFileName string `json:"stopFileName"`
+	OnFailEmail  string `json:"onFailEmail"`
+	CutOffTime   int    `json:"cutofftime"`
 }
 
 func (config *Config) String() string {
-	return fmt.Sprintf("StopFileName=%s, ", config.StopFileName)
+	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q",
+		config.StopFileName, config.OnFailEmail)
 }
 
 // exists returns whether the given file or directory exists
@@ -51,6 +55,7 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 	// check to see if the program was forced to stop with the 'stop.txt'
 	if exists, _ := exists(config.StopFileName); exists {
 		log.Printf("%s file found, stopping	process.", workingDir+"/"+config.StopFileName)
+		// Send email
 		server.Shutdown(context.Background())
 		return
 	}
@@ -135,14 +140,19 @@ func main() {
 	log.SetOutput(f)
 	defer f.Close()
 
-	// TODO: read configuration file:
+	// read configuration file:
 	config, err := readConfigurationFile(workingDir + "/" + ConfFileName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	port := flag.String("host", ":8000", "the port of the application")
+	controlFile := flag.String("ctl", controlFileNotSpecified, "control file to load")
 	flag.Parse()
+
+	if *controlFile == controlFileNotSpecified {
+		log.Fatal("control file with -ctl option not specified")
+	}
 
 	log.Printf("Listening at: %q", *port)
 
