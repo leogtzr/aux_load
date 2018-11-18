@@ -20,6 +20,10 @@ type InputFileInfo struct {
 }
 
 func processFiles(server *http.Server) {
+
+	// TODO: read configuration
+	// check to see if the program was forced to stop with the 'stop.txt'
+
 	for i := 0; i < 5; i++ {
 		fmt.Println(i)
 		time.Sleep(1 * time.Second)
