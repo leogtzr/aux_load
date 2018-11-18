@@ -27,6 +27,11 @@ type InputFileInfo struct {
 
 // Config ...
 type Config struct {
+	StopFileName string `json:"stopFileName"`
+}
+
+func (config *Config) String() string {
+	return fmt.Sprintf("StopFileName=%s, ", config.StopFileName)
 }
 
 // exists returns whether the given file or directory exists
@@ -41,9 +46,14 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func processFiles(server *http.Server, config *Config) {
+func processFiles(server *http.Server, config *Config, workingDir string) {
 
 	// check to see if the program was forced to stop with the 'stop.txt'
+	if exists, _ := exists(config.StopFileName); exists {
+		log.Printf("%s file found, stopping	process.", workingDir+"/"+config.StopFileName)
+		server.Shutdown(context.Background())
+		return
+	}
 
 	for i := 0; i < 2; i++ {
 		fmt.Println(i)
@@ -126,7 +136,6 @@ func main() {
 	defer f.Close()
 
 	// TODO: read configuration file:
-	fmt.Println("About to read config ... ")
 	config, err := readConfigurationFile(workingDir + "/" + ConfFileName)
 	if err != nil {
 		log.Fatal(err)
@@ -141,7 +150,7 @@ func main() {
 	server := settingUpServer(*port)
 
 	// main process ...
-	go processFiles(server, config)
+	go processFiles(server, config, workingDir)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
