@@ -19,9 +19,25 @@ type InputFileInfo struct {
 	LoadFile  string
 }
 
+// Config ...
+type Config struct {
+}
+
+// exists returns whether the given file or directory exists
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
+}
+
 func processFiles(server *http.Server) {
 
-	// TODO: read configuration
+	// TODO: read configuration file.
 	// check to see if the program was forced to stop with the 'stop.txt'
 
 	for i := 0; i < 5; i++ {
