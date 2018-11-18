@@ -103,8 +103,6 @@ func readConfigurationFile(path string) (*Config, error) {
 
 	jsonParser := json.NewDecoder(configFile)
 	err = jsonParser.Decode(&config)
-	fmt.Println("Here ... ")
-	fmt.Println(config)
 	if err != nil {
 		return nil, err
 	}
