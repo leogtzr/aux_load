@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -10,6 +11,11 @@ import (
 	"time"
 
 	"github.com/kardianos/osext"
+)
+
+const (
+	// ConfFileName ...
+	ConfFileName = "env.conf"
 )
 
 // InputFileInfo ...
@@ -35,12 +41,11 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func processFiles(server *http.Server) {
+func processFiles(server *http.Server, config *Config) {
 
-	// TODO: read configuration file.
 	// check to see if the program was forced to stop with the 'stop.txt'
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 2; i++ {
 		fmt.Println(i)
 		time.Sleep(1 * time.Second)
 	}
@@ -82,6 +87,30 @@ func settingUpServer(addr string) *http.Server {
 	return server
 }
 
+func readConfigurationFile(path string) (*Config, error) {
+	exists, err := exists(path)
+	if !exists {
+		return nil, fmt.Errorf("'%s' does not exists", path)
+	}
+
+	configFile, err := os.Open(path)
+	defer configFile.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var config Config
+
+	jsonParser := json.NewDecoder(configFile)
+	err = jsonParser.Decode(&config)
+	fmt.Println("Here ... ")
+	fmt.Println(config)
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
 func main() {
 
 	// Getting working directory:
@@ -98,6 +127,13 @@ func main() {
 	log.SetOutput(f)
 	defer f.Close()
 
+	// TODO: read configuration file:
+	fmt.Println("About to read config ... ")
+	config, err := readConfigurationFile(workingDir + "/" + ConfFileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	port := flag.String("host", ":8000", "the port of the application")
 	flag.Parse()
 
@@ -107,7 +143,7 @@ func main() {
 	server := settingUpServer(*port)
 
 	// main process ...
-	go processFiles(server)
+	go processFiles(server, config)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
