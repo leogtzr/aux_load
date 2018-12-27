@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -14,6 +15,7 @@ const (
 	// ConfFileName ...
 	ConfFileName            = "env.conf"
 	controlFileNotSpecified = "_._notspecified_._"
+	getCurrentSchemaProgram = "get_current_schema.sh"
 )
 
 // InputFileInfo ...
@@ -29,6 +31,7 @@ type Config struct {
 	OnFailEmail  string `json:"onFailEmail"`
 	CutOffTime   int    `json:"cutOffTime"`
 	ControlFile  string
+	workingDir   string
 }
 
 // Stats represents the basic of the structure to save information about the files that have
@@ -52,6 +55,18 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
+// code to invoke an external program to get
+func currentDataSource(workingDir string) (string, error) {
+	var cmdOut []byte
+
+	cmdOut, err := exec.Command(workingDir+"/"+getCurrentSchemaProgram, []string{}...).Output()
+	if err != nil {
+		return "", fmt.Errorf("there was an error running the command: '%q'", err)
+	}
+
+	return string(cmdOut), nil
+}
+
 func processFiles(server *http.Server, config *Config, workingDir string) {
 
 	// check to see if the program was forced to stop with the 'stop.txt'
@@ -70,7 +85,9 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 		return
 	}
 
-	currentDatasorce, err := dataSource()
+	// TODO: Pending ...
+	currentDatasorce, _ := currentDataSource(workingDir)
+	fmt.Println(currentDatasorce)
 
 	// main process:
 	for i := 0; i < 10; i++ {
@@ -116,7 +133,8 @@ func settingUpServer(addr string) *http.Server {
 	return server
 }
 
-func readConfigurationFile(path, controlFile string) (*Config, error) {
+func readConfigurationFile(workingDir, confFileName string) (*Config, error) {
+	path := workingDir + "/" + confFileName
 	exists, err := exists(path)
 	if !exists {
 		return nil, fmt.Errorf("'%s' does not exists", path)
@@ -136,7 +154,7 @@ func readConfigurationFile(path, controlFile string) (*Config, error) {
 		return nil, err
 	}
 
-	config.ControlFile = controlFile
+	config.ControlFile = confFileName
 	return &config, nil
 }
 
@@ -151,7 +169,7 @@ func Start(workingDir, controlFile, addr string) error {
 	defer f.Close()
 
 	// read configuration file:
-	config, err := readConfigurationFile(workingDir+"/"+ConfFileName, controlFile)
+	config, err := readConfigurationFile(workingDir, ConfFileName)
 	if err != nil {
 		return err
 	}
