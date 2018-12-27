@@ -1,5 +1,7 @@
 package auxload
 
+// readonly CHECK_AUX_SCRIPT='jobs/check_aux_db/check_aux_db.sh'
+
 import (
 	"context"
 	"encoding/json"
