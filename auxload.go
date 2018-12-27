@@ -55,7 +55,7 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-// code to invoke an external program to get
+// code to invoke an external program to get the current datasource.
 func currentDataSource(workingDir string) (string, error) {
 	var cmdOut []byte
 
@@ -65,6 +65,10 @@ func currentDataSource(workingDir string) (string, error) {
 	}
 
 	return string(cmdOut), nil
+}
+
+func getAuxSchemaLetter(schema string) string {
+	return schema[len(schema)-1:]
 }
 
 func processFiles(server *http.Server, config *Config, workingDir string) {
@@ -86,8 +90,14 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 	}
 
 	// TODO: Pending ...
-	currentDatasorce, _ := currentDataSource(workingDir)
-	fmt.Println(currentDatasorce)
+	currentDatasorce, err := currentDataSource(workingDir)
+	if err != nil {
+		log.Println("Error trying to get current schema to load to the offline schema.")
+		// TODO: Log and Send email
+		server.Shutdown(context.Background())
+		return
+	}
+	log.Printf("%q is the current schema.", currentDatasorce)
 
 	// main process:
 	for i := 0; i < 10; i++ {
