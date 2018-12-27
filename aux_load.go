@@ -27,13 +27,17 @@ type InputFileInfo struct {
 type Config struct {
 	StopFileName string `json:"stopFileName"`
 	OnFailEmail  string `json:"onFailEmail"`
-	CutOffTime   int    `json:"cutofftime"`
+	CutOffTime   int    `json:"cutOffTime"`
 	ControlFile  string
 }
 
+// Stats represents the basic of the structure to save information about the files that have
+// been already processed.
+type Stats struct{}
+
 func (config *Config) String() string {
-	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q",
-		config.StopFileName, config.OnFailEmail)
+	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q, cutOffTime=%q",
+		config.StopFileName, config.OnFailEmail, config.CutOffTime)
 }
 
 // exists returns whether the given file or directory exists
