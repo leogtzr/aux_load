@@ -1,4 +1,4 @@
-package aux_load
+package auxload
 
 import (
 	"context"
@@ -58,6 +58,7 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 		return
 	}
 
+	// main process:
 	for i := 0; i < 2; i++ {
 		fmt.Println(i)
 		time.Sleep(1 * time.Second)
@@ -72,9 +73,10 @@ func statsHandler() http.HandlerFunc {
 	})
 }
 
-func stopHandler() http.HandlerFunc {
+func stopHandler(server *http.Server) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// stop
+		// print useful information here.
+		server.Shutdown(context.Background())
 	})
 }
 
@@ -94,7 +96,7 @@ func settingUpServer(addr string) *http.Server {
 	})
 
 	m.HandleFunc("/stats", statsHandler())
-	m.HandleFunc("/stop", stopHandler())
+	m.HandleFunc("/stop", stopHandler(server))
 	m.HandleFunc("/", okHandler())
 
 	return server
