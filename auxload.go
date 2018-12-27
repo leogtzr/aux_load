@@ -57,13 +57,23 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 	// check to see if the program was forced to stop with the 'stop.txt'
 	if exists, _ := exists(config.StopFileName); exists {
 		log.Printf("%s file found, stopping	process.", workingDir+"/"+config.StopFileName)
-		// Send email
+		// TODO: Send email
 		server.Shutdown(context.Background())
 		return
 	}
 
+	if isFound, _ := exists(fmt.Sprintf("%q/%q.running", workingDir, config.ControlFile)); isFound {
+		log.Printf("%q/%q.running file found, stopping process. Aux database load was already running when it tried to start. Need manual intervention.",
+			workingDir, config.StopFileName)
+		// TODO: Send email
+		server.Shutdown(context.Background())
+		return
+	}
+
+	currentDatasorce, err := dataSource()
+
 	// main process:
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 10; i++ {
 		fmt.Println(i)
 		time.Sleep(1 * time.Second)
 	}
