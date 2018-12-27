@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -71,6 +72,13 @@ func getAuxSchemaLetter(schema string) string {
 	return schema[len(schema)-1:]
 }
 
+func getOppositeAuxSchema(schema string) string {
+	if schema := strings.ToUpper(schema); schema == "A" {
+		return "B"
+	}
+	return "A"
+}
+
 func processFiles(server *http.Server, config *Config, workingDir string) {
 
 	// check to see if the program was forced to stop with the 'stop.txt'
@@ -89,15 +97,17 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 		return
 	}
 
-	// TODO: Pending ...
-	currentDatasorce, err := currentDataSource(workingDir)
+	dataSorce, err := currentDataSource(workingDir)
 	if err != nil {
 		log.Println("Error trying to get current schema to load to the offline schema.")
-		// TODO: Log and Send email
 		server.Shutdown(context.Background())
 		return
 	}
-	log.Printf("%q is the current schema.", currentDatasorce)
+
+	dataSourceSchemaLetter := getAuxSchemaLetter(dataSorce)
+	log.Printf("%q is the current schema, %q", dataSorce, dataSourceSchemaLetter)
+	schemaToLoad := getOppositeAuxSchema(dataSourceSchemaLetter)
+	log.Println("We will load to: " + schemaToLoad)
 
 	// main process:
 	for i := 0; i < 10; i++ {
