@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"path/filepath"
 )
 
 const (
@@ -42,20 +43,17 @@ type Config struct {
 type Stats struct{}
 
 func (config *Config) String() string {
-	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q, cutOffTime=%q",
-		config.StopFileName, config.OnFailEmail, config.CutOffTime)
+	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q, CutOffTime=%q, ControlFile=%q, workingDir=%q",
+		config.StopFileName, config.OnFailEmail, config.CutOffTime, config.ControlFile, config.workingDir)
 }
 
-// exists returns whether the given file or directory exists
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
+func exists(name string) bool {
+    if _, err := os.Stat(name); err != nil {
+        if os.IsNotExist(err) {
+            return false
+        }
 	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return true, err
+    return true
 }
 
 // code to invoke an external program to get the current datasource.
@@ -83,19 +81,22 @@ func getOppositeAuxSchema(schema string) string {
 
 func processFiles(server *http.Server, config *Config, workingDir string) {
 
+	fmt.Println(config)
+
 	// check to see if the program was forced to stop with the 'stop.txt'
-	if exists, _ := exists(config.StopFileName); exists {
-		log.Printf("%s file found, stopping	process.", workingDir+"/"+config.StopFileName)
+	if exists := exists(filepath.Join(config.workingDir, config.StopFileName)); exists {
+		log.Printf("%s file found, stopping	process.", filepath.Join(config.workingDir, config.StopFileName))
 		// TODO: Send email
 		server.Shutdown(context.Background())
 		return
 	}
 
-	if isFound, _ := exists(fmt.Sprintf("%q/%q.running", workingDir, config.ControlFile)); isFound {
+	if isFound := exists(filepath.Join(config.workingDir, config.ControlFile + ".running")); isFound {
 		log.Printf("%q/%q.running file found, stopping process. Aux database load was already running when it tried to start. Need manual intervention.",
-			workingDir, config.StopFileName)
+			workingDir, config.ControlFile)
 		// TODO: Send email
 		server.Shutdown(context.Background())
+		fmt.Println(":(")
 		return
 	}
 
@@ -157,7 +158,7 @@ func settingUpServer(addr string) *http.Server {
 
 func readConfigurationFile(workingDir, confFileName string) (*Config, error) {
 	path := workingDir + "/" + confFileName
-	exists, err := exists(path)
+	exists := exists(path)
 	if !exists {
 		return nil, fmt.Errorf("'%s' does not exists", path)
 	}
@@ -195,6 +196,9 @@ func Start(workingDir, controlFile, addr string) error {
 	if err != nil {
 		return err
 	}
+	config.ControlFile = controlFile
+
+	fmt.Println(fmt.Sprintf("config.ControlFile = %q | controlFile = %q", config.ControlFile, controlFile))
 
 	log.Printf("Listening at: %q", addr)
 
