@@ -43,7 +43,7 @@ type Config struct {
 type Stats struct{}
 
 func (config *Config) String() string {
-	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q, CutOffTime=%q, ControlFile=%q, workingDir=%q",
+	return fmt.Sprintf("StopFileName=%s, OnFailEmail=%q, CutOffTime=%d, ControlFile=%q, workingDir=%q",
 		config.StopFileName, config.OnFailEmail, config.CutOffTime, config.ControlFile, config.workingDir)
 }
 
@@ -59,10 +59,10 @@ func exists(name string) bool {
 // code to invoke an external program to get the current datasource.
 func currentDataSource(workingDir string) (string, error) {
 	var cmdOut []byte
-
-	cmdOut, err := exec.Command(workingDir+"/"+getCurrentSchemaProgram, []string{}...).Output()
+	commandPath := filepath.Join(workingDir, getCurrentSchemaProgram)
+	cmdOut, err := exec.Command(commandPath, []string{}...).Output()
 	if err != nil {
-		return "", fmt.Errorf("there was an error running the command: '%q'", err)
+		return "", fmt.Errorf("there was an error running the command: %q => %q", commandPath, err)
 	}
 
 	return string(cmdOut), nil
@@ -100,9 +100,9 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 		return
 	}
 
-	dataSorce, err := currentDataSource(workingDir)
+	dataSorce, err := currentDataSource(config.workingDir)
 	if err != nil {
-		log.Println("Error trying to get current schema to load to the offline schema.")
+		log.Println(err)
 		server.Shutdown(context.Background())
 		return
 	}
@@ -157,7 +157,7 @@ func settingUpServer(addr string) *http.Server {
 }
 
 func readConfigurationFile(workingDir, confFileName string) (*Config, error) {
-	path := workingDir + "/" + confFileName
+	path := filepath.Join(workingDir, confFileName)
 	exists := exists(path)
 	if !exists {
 		return nil, fmt.Errorf("'%s' does not exists", path)
