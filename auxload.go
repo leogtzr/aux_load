@@ -198,8 +198,6 @@ func Start(workingDir, controlFile, addr string) error {
 	}
 	config.ControlFile = controlFile
 
-	fmt.Println(fmt.Sprintf("config.ControlFile = %q | controlFile = %q", config.ControlFile, controlFile))
-
 	log.Printf("Listening at: %q", addr)
 
 	// Getting the server:
