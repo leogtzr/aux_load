@@ -14,9 +14,6 @@ readonly seconds_to_wait_on_failure_getting_ds=30
     exit ${error_reading_conf_file}
 }
 
-# ORACLE_HOME="/az/oracle/db/product/12.1.0/client_1"
-export DB_CONNECTION=AZO_CORE/atgdbpwd@pr-camaro1-sc01.autozone.com:19100/az_atg_diy.autozone.com
-
 cd "${working_dir}"
 
 get_current_aux_schema() {
@@ -49,5 +46,7 @@ SQL_QUERY
         echo ""
     fi
 }
+
+get_current_aux_schema
 
 exit 0
