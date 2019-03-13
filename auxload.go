@@ -80,9 +80,6 @@ func getOppositeAuxSchema(schema string) string {
 }
 
 func processFiles(server *http.Server, config *Config, workingDir string) {
-
-	fmt.Println(config)
-
 	// check to see if the program was forced to stop with the 'stop.txt'
 	if exists := exists(filepath.Join(config.workingDir, config.StopFileName)); exists {
 		log.Printf("%s file found, stopping	process.", filepath.Join(config.workingDir, config.StopFileName))
@@ -96,7 +93,6 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 			workingDir, config.ControlFile)
 		// TODO: Send email
 		server.Shutdown(context.Background())
-		fmt.Println(":(")
 		return
 	}
 
