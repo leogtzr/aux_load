@@ -3,6 +3,7 @@ package auxload
 // readonly CHECK_AUX_SCRIPT='jobs/check_aux_db/check_aux_db.sh'
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -109,10 +110,25 @@ func processFiles(server *http.Server, config *Config, workingDir string) {
 	log.Println("We will load to: " + schemaToLoad)
 
 	// main process:
-	for i := 0; i < 10; i++ {
-		fmt.Println(i)
-		time.Sleep(1 * time.Second)
-	}
+	// for i := 0; i < 10; i++ {
+	// 	fmt.Println(i)
+	// 	time.Sleep(1 * time.Second)
+	// }
+	file, err := os.Open(filepath.Join(config.workingDir, config.ControlFile))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+		// Process each file:
+        fmt.Println(scanner.Text())
+    }
+
+    if err := scanner.Err(); err != nil {
+        log.Fatal(err)
+    }
 
 	server.Shutdown(context.Background())
 }
